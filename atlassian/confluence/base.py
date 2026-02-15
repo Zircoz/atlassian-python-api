@@ -134,27 +134,39 @@ class ConfluenceBase(AtlassianRestAPI):
 
             yield from response.get("results", [])
 
-            if self.cloud:
-                url = response.get("_links", {}).get("next", {}).get("href")
-                if url is None:
-                    break
-                # From now on we have absolute URLs with parameters
-                absolute = True
-                # Params are now provided by the url
-                params = {}
-                # Trailing should not be added as it is already part of the url
-                trailing = False
+            next_link = response.get("_links", {}).get("next")
+            if next_link is None:
+                break
+            if isinstance(next_link, str):
+                url = next_link
             else:
-                if response.get("_links", {}).get("next") is None:
-                    break
-                # For server, we need to extract the next page URL from the _links.next.href
-                next_url = response.get("_links", {}).get("next", {}).get("href")
-                if next_url is None:
-                    break
-                url = next_url
-                absolute = True
-                params = {}
-                trailing = False
+                url = next_link.get("href")
+            if url is None:
+                break
+
+            if url.startswith("/"):
+                # Prepend base URL from self.url, stripping the API root suffix to preserve path prefix
+                # Example: self.url = "https://api.atlassian.com/ex/confluence/abc/wiki/rest/api"
+                #          api_root = "wiki/rest/api"
+                #          base = "https://api.atlassian.com/ex/confluence/abc"
+                #          relative = "/rest/api/content?cursor=1"
+                #          result = "https://api.atlassian.com/ex/confluence/abc/rest/api/content?cursor=1"
+                api_root_suffix = f"/{self.api_root}"
+                if self.url.endswith(api_root_suffix):
+                    base = self.url[:-len(api_root_suffix)]
+                else:
+                    # Fallback: extract scheme+netloc if api_root suffix not found
+                    from urllib.parse import urlparse
+                    parsed = urlparse(self.url)
+                    base = f"{parsed.scheme}://{parsed.netloc}"
+                url = base + url
+
+            # From now on we have absolute URLs with parameters
+            absolute = True
+            # Params are now provided by the url
+            params = {}
+            # Trailing should not be added as it is already part of the url
+            trailing = False
 
         return
 
