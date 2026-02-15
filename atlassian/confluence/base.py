@@ -134,27 +134,22 @@ class ConfluenceBase(AtlassianRestAPI):
 
             yield from response.get("results", [])
 
-            if self.cloud:
-                url = response.get("_links", {}).get("next", {}).get("href")
-                if url is None:
-                    break
-                # From now on we have absolute URLs with parameters
-                absolute = True
-                # Params are now provided by the url
-                params = {}
-                # Trailing should not be added as it is already part of the url
-                trailing = False
+            next_link = response.get("_links", {}).get("next")
+            if next_link is None:
+                break
+            if isinstance(next_link, str):
+                url = next_link
             else:
-                if response.get("_links", {}).get("next") is None:
-                    break
-                # For server, we need to extract the next page URL from the _links.next.href
-                next_url = response.get("_links", {}).get("next", {}).get("href")
-                if next_url is None:
-                    break
-                url = next_url
-                absolute = True
-                params = {}
-                trailing = False
+                url = next_link.get("href")
+            if url is None:
+                break
+
+            # From now on we have absolute URLs with parameters
+            absolute = True
+            # Params are now provided by the url
+            params = {}
+            # Trailing should not be added as it is already part of the url
+            trailing = False
 
         return
 

@@ -63,7 +63,13 @@ class ConfluenceCloudBase(ConfluenceBase):
             yield from response.get("results", [])
 
             # Confluence Cloud uses _links.next.href for pagination
-            url = response.get("_links", {}).get("next", {}).get("href")
+            next_link = response.get("_links", {}).get("next")
+            if next_link is None:
+                break
+            if isinstance(next_link, str):
+                url = next_link
+            else:
+                url = next_link.get("href")
             if url is None:
                 break
             # From now on we have absolute URLs with parameters
