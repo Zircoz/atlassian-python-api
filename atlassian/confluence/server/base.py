@@ -63,13 +63,18 @@ class ConfluenceServerBase(ConfluenceBase):
             yield from response.get("results", [])
 
             # Confluence Server uses _links.next.href for pagination
-            if response.get("_links", {}).get("next") is None:
+            next_link = response.get("_links", {}).get("next")
+            if next_link is None:
                 break
             # For server, we need to extract the next page URL from the _links.next.href
-            next_url = response.get("_links", {}).get("next", {}).get("href")
-            if next_url is None:
+            if isinstance(next_link, str):
+                url = next_link
+            else:
+                url = next_link.get("href")
+
+            if url is None:
                 break
-            url = next_url
+
             absolute = True
             params = {}
             trailing = False
