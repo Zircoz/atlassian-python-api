@@ -18,7 +18,11 @@ class Confluence(ConfluenceBase):
 
     def __init__(self, url, *args, **kwargs):
         # Detect which implementation to use
-        if ("atlassian.net" in url or "jira.com" in url) and ("/wiki" not in url):
+        # Priority: explicit cloud= kwarg > URL-based heuristic
+        is_cloud = kwargs.get("cloud")
+        if is_cloud is None:
+            is_cloud = "atlassian.net" in url or "jira.com" in url or "api.atlassian.com" in url
+        if is_cloud:
             impl = ConfluenceCloud(url, *args, **kwargs)
         else:
             impl = ConfluenceServer(url, *args, **kwargs)

@@ -13,10 +13,10 @@ class Cloud(ConfluenceCloudBase):
         if "cloud" not in kwargs:
             kwargs["cloud"] = True
         if "api_version" not in kwargs:
-            kwargs["api_version"] = "2"
+            kwargs["api_version"] = "latest"
         if "api_root" not in kwargs:
-            kwargs["api_root"] = "wiki/api/v2"
-        url = url.strip("/")
+            kwargs["api_root"] = "wiki/rest/api"
+        url = url.strip("/") + f"/{kwargs['api_root']}"
         super(Cloud, self).__init__(url, *args, **kwargs)
 
     # Content Management
@@ -27,6 +27,14 @@ class Cloud(ConfluenceCloudBase):
     def get_content_by_type(self, content_type, **kwargs):
         """Get content by type (page, blogpost, etc.)."""
         return self.get("content", params={"type": content_type, **kwargs})
+
+    def get_all_pages_from_space(self, space_key, **kwargs):
+        """Get all pages from space."""
+        return self._get_paged("content", params={"spaceKey": space_key, "type": "page", **kwargs})
+
+    def get_all_blog_posts_from_space(self, space_key, **kwargs):
+        """Get all blog posts from space."""
+        return self._get_paged("content", params={"spaceKey": space_key, "type": "blogpost", **kwargs})
 
     def create_content(self, data, **kwargs):
         """Create new content."""
