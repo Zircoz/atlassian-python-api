@@ -16,7 +16,7 @@ class Cloud(ConfluenceCloudBase):
             kwargs["api_version"] = "2"
         if "api_root" not in kwargs:
             kwargs["api_root"] = "wiki/api/v2"
-        url = url.strip("/")
+        url = url.strip("/") + f"/{kwargs['api_root']}/{kwargs['api_version']}"
         super(Cloud, self).__init__(url, *args, **kwargs)
 
     # Content Management
